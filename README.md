@@ -1,6 +1,6 @@
 # mdn-todo-list
 
-this todo list is made with Reactjs and ReactDom using cdn method.
+this todo list is made with Reactjs and ReactDom using cdn approach.
 in this project you can:
   * add task
   * edit task using conditional rendering
