@@ -1,0 +1,1 @@
+export const test = () => console.log('in App file')
