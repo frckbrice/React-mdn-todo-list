@@ -73,6 +73,11 @@ body {
   display: inline-block;
   margin-top: 0.4rem;
 }
+
+/* .form-group > input[type="text"]:focus {
+  outline: 3px solid salmon;
+} */
+
 .btn {
   padding: 0.8rem 1rem 0.7rem;
   border: 0.2rem solid #4d4d4d;
@@ -105,8 +110,10 @@ body {
 }
 .btn-group > * {
   flex: 1 1 49%;
+  /* border: 3px solid salmon; */
 }
 .btn-group > * + * {
+  
   margin-left: 0.8rem;
 }
 .label-wrapper {

@@ -17,6 +17,22 @@
     <script type="text/babel">
       const rootElement = document.getElementById("root");
 
+      const FILTER_MAP = {
+        All: (task) => task,
+        Active: (task) => !task.completed,
+        Completed: (task) => task.completed,
+      };
+
+      function usePrevious(value) {
+        const ref = React.useRef();
+        React.useEffect(() => {
+          ref.current = value;
+        });
+        return ref.current;
+      }
+
+      const filterName = Object.keys(FILTER_MAP);
+
       function App(props) {
         const [tasks, setTasks] = React.useState(props.tasks);
         console.log(props.tasks);
@@ -38,7 +54,7 @@
 
         const editTask = (id, newName) => {
           const tasksListUpdateEdit = tasks.map((task) => {
-            if (task.id !== id) {
+            if (task.id === id) {
               return { ...task, name: newName };
             }
             return task;
@@ -46,21 +62,33 @@
           setTasks(tasksListUpdateEdit);
         };
 
-        const tasksList = tasks.map((task) => (
-          <Todo
-            id={task.id}
-            name={task.name}
-            completed={task.completed}
-            key={task.id}
-            taskCompleted={confirmTaskIsCompleted}
-            deleteTask={deleteTask}
-            editTask={editTask}
+        const [filter, setFilter] = React.useState("All");
+
+        const btnList = filterName.map((name) => (
+          <FilterBtn
+            key={name}
+            name={name}
+            isPressed={name === filter}
+            setFilter={setFilter}
           />
         ));
 
-        let i = 4;
+        const tasksList = tasks
+          .filter(FILTER_MAP[filter])
+          .map((task) => (
+            <Todo
+              id={task.id}
+              name={task.name}
+              completed={task.completed}
+              key={task.id}
+              taskCompleted={confirmTaskIsCompleted}
+              deleteTask={deleteTask}
+              editTask={editTask}
+            />
+          ));
+
         const addTask = (name) => {
-          const newTaskToAdd = { id: `${i++}`, name: name, completed: false };
+          const newTaskToAdd = { id: Date.now(), name, completed: false };
           setTasks([...tasks, newTaskToAdd]);
         };
 
@@ -69,16 +97,24 @@
           tasksList.length !== 1 ? "remaining tasks" : "remaining task";
         const numberTasks = `${tasksList.length} ${textOnNumberOfTasks}`;
 
+        const headingFocus = React.useRef(null);
+        const previousLength = usePrevious(tasksList.length);
+
+        React.useEffect(() => {
+          if(tasksList.length - previousLength == -1 ) {
+            console.log("Tasks list length changed")
+            headingFocus.current.focus();
+          }
+        }, [tasksList.length, previousLength])
+
         return (
           <div className="todoapp stack-large">
             <h1>Todo List React Test</h1>
             <Form onAdd={addTask} />
-            <div className="filters btn-group stack-exception">
-              <FilterBtn />
-              <FilterBtn />
-              <FilterBtn />
-            </div>
-            <h2 id="list-heading">{numberTasks}</h2>
+            <div className="filters btn-group stack-exception">{btnList}</div>
+            <h2 id="list-heading" ref={headingFocus} tabIndex="-1">
+              {numberTasks}
+            </h2>
             <ul className="todo-list stack-large stack-exception">
               {tasksList}
             </ul>
@@ -88,8 +124,11 @@
 
       const Todo = (props) => {
         const [willChange, setHasChange] = React.useState(false);
-        const [oldName, setOldName] = React.useState("");
-        const [newName, setNewName] = React.useState(props.name);
+        const [newName, setNewName] = React.useState(props.name || "");
+        const editFieldRef = React.useRef(null);
+        const editButtonRef = React.useRef(null);
+
+        const previouslyChange = usePrevious(willChange);
 
         const handleChange = (e) => {
           setNewName(event.target.value);
@@ -119,6 +158,7 @@
                 type="text"
                 value={newName}
                 onChange={handleChange}
+                ref={editFieldRef}
               />
             </div>
             <div className="btn-group">
@@ -142,7 +182,7 @@
                 id={props.id}
                 type="checkbox"
                 defaultChecked={props.completed}
-                onChange={() => props.toggleTaskCompleted(props.id)}
+                onChange={() => props.taskCompleted(props.id)}
               />
               <label className="todo-label" htmlFor={props.id}>
                 {props.name}
@@ -153,6 +193,7 @@
                 type="button"
                 className="btn"
                 onClick={() => setHasChange(true)}
+                ref={editButtonRef}
               >
                 Edit
               </button>
@@ -166,6 +207,15 @@
             </div>
           </div>
         );
+
+        React.useEffect(() => {
+          if (!previouslyChange && willChange) {
+            editFieldRef.current.focus();
+          }
+          if (previouslyChange && !willChange) {
+            editButtonRef.current.focus();
+          }
+        }, [previouslyChange, willChange]);
 
         return (
           <li className="todo stack-small">
@@ -217,10 +267,15 @@
         );
       };
 
-      const FilterBtn = () => {
+      const FilterBtn = (props) => {
         return (
-          <button type="button" className="btn toggle-btn" aria-pressed="true">
-            <span> All tasks</span>
+          <button
+            type="button"
+            className="btn toggle-btn"
+            aria-pressed={props.isPressed}
+            onClick={() => props.setFilter(props.name)}
+          >
+            <span> {props.name}</span>
           </button>
         );
       };
