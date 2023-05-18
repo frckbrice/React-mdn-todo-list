@@ -85,14 +85,13 @@
               deleteTask={deleteTask}
               editTask={editTask}
             />
-          ));
+          )).reverse();
 
         const addTask = (name) => {
           const newTaskToAdd = { id: Date.now(), name, completed: false };
           setTasks([...tasks, newTaskToAdd]);
         };
 
-        console.log(tasksList.length);
         const textOnNumberOfTasks =
           tasksList.length !== 1 ? "remaining tasks" : "remaining task";
         const numberTasks = `${tasksList.length} ${textOnNumberOfTasks}`;
@@ -129,6 +128,15 @@
         const editButtonRef = React.useRef(null);
 
         const previouslyChange = usePrevious(willChange);
+
+        React.useEffect(() => {
+          if (!previouslyChange && willChange) {
+            editFieldRef.current.focus();
+          }
+          if (previouslyChange && !willChange) {
+            editButtonRef.current.focus();
+          }
+        }, [previouslyChange, willChange]);
 
         const handleChange = (e) => {
           setNewName(event.target.value);
@@ -207,15 +215,6 @@
             </div>
           </div>
         );
-
-        React.useEffect(() => {
-          if (!previouslyChange && willChange) {
-            editFieldRef.current.focus();
-          }
-          if (previouslyChange && !willChange) {
-            editButtonRef.current.focus();
-          }
-        }, [previouslyChange, willChange]);
 
         return (
           <li className="todo stack-small">
